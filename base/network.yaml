@@ -1,0 +1,3 @@
+networks:
+  flight-analytics-net:
+    driver: bridge
