@@ -1,6 +1,7 @@
 COMPOSE_FILES = \
 	-f base/network.yaml \
-	-f hadoop/docker-compose.hadoop.yaml --project-directory .
+	-f hadoop/docker-compose.hadoop.yaml \
+	-f nifi/docker-compose.nifi.yaml --project-directory .
 
 up:
 	docker compose $(COMPOSE_FILES) up -d
