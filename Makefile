@@ -3,7 +3,9 @@ COMPOSE_FILES = \
 	-f hadoop/docker-compose.hadoop.yaml \
 	-f nifi/docker-compose.nifi.yaml \
 	-f spark/docker-compose.spark.yaml \
-	-f mongo/docker-compose.mongo.yaml --project-directory .
+	-f mongo/docker-compose.mongo.yaml \
+	-f metabase/docker-compose.metabase.yaml \
+	--project-directory .
 
 up:
 	docker compose $(COMPOSE_FILES) up -d
