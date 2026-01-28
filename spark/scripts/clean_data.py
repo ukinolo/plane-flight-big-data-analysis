@@ -7,6 +7,9 @@ from pyspark.sql.types import DoubleType, IntegerType, BooleanType, LongType
 spark = SparkSession.builder \
     .appName("Airplane data cleaner") \
     .config("spark.sql.parquet.enableVectorizedReader", "false") \
+    .config("spark.sql.parquet.enableDictionary", "false") \
+    .config("spark.sql.files.maxRecordsPerFile", 200_000) \
+    .config("spark.sql.parquet.block.size", 32 * 1024 * 1024) \
     .getOrCreate()
 
 HDFS_NAMENODE = os.environ["CORE_CONF_fs_defaultFS"]
@@ -127,7 +130,9 @@ numeric_columns = {
 
 df_cleaned = df_raw.select(select_columns)
 
-df_cleaned = df_cleaned.dropna()
+df_cleaned = df_cleaned.dropna(
+    subset=["DepTime", "DepDelayMinutes", "DepDelay", "ArrTime", "ArrDelayMinutes", "AirTime", "ActualElapsedTime", "Tail_Number", "DepDel15", "DepartureDelayGroups", "TaxiOut", "WheelsOff", "WheelsOn", "TaxiIn", "ArrDelay", "ArrDel15", "ArrivalDelayGroups"]
+)
 
 
 for name, dtype in numeric_columns.items():
@@ -142,7 +147,7 @@ for name in bool_columns:
         ).otherwise(False).cast(BooleanType())
     )
 
-df_cleaned.repartition(100)
+df_cleaned = df_cleaned.repartition(200)
 df_cleaned.write.mode("overwrite").parquet(DESTINATION_DATA_PATH)
 
 spark.stop()

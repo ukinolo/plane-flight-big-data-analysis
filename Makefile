@@ -5,6 +5,7 @@ COMPOSE_FILES = \
 	-f spark/docker-compose.spark.yaml \
 	-f mongo/docker-compose.mongo.yaml \
 	-f metabase/docker-compose.metabase.yaml \
+	-f airflow/docker-compose.airflow.yaml \
 	--project-directory .
 
 up:

@@ -1,0 +1,67 @@
+services:
+  postgres:
+    image: postgres:15.0
+    container_name: postgres
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    volumes:
+      - postgres_storage:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - flight-analytics-net
+    restart: always
+    
+  airflow-webserver:
+    build:
+      dockerfile: ./airflow/Dockerfile
+    container_name: airflow-webserver
+    env_file:
+      - ./airflow/airflow.env
+    volumes:
+      - ./airflow/jobs:/opt/airflow/dags
+      - ./airflow/init:/opt/airflow/init
+      - ./nifi/hadoop:/opt/hadoop/conf:ro
+      - ./spark/scripts:/opt/spark/scripts
+      - airflow_logs:/opt/airflow/logs
+      - airflow_database:/opt/airflow/db
+    user: "50000:0"
+    depends_on:
+      - postgres
+    ports:
+      - "8080:8080"
+    command: ["bash", "/opt/airflow/init/init_airflow.sh", "airflow", "webserver"]
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    networks:
+      - flight-analytics-net
+
+  airflow-scheduler:
+    build:
+      dockerfile: ./airflow/Dockerfile
+    container_name: airflow-scheduler
+    env_file:
+      - ./airflow/airflow.env
+    volumes:
+      - ./airflow/jobs:/opt/airflow/dags
+      - ./airflow/init:/opt/airflow/init
+      - ./nifi/hadoop:/opt/hadoop/conf:ro
+      - ./spark/scripts:/opt/spark/scripts
+      - airflow_logs:/opt/airflow/logs
+      - airflow_database:/opt/airflow/db
+    user: "50000:0"
+    depends_on:
+      - postgres
+    command: ["bash", "/opt/airflow/init/init_airflow.sh", "airflow", "scheduler"]
+    networks:
+      - flight-analytics-net
+
+volumes:
+  postgres_storage:
+  airflow_logs:
+  airflow_database:
