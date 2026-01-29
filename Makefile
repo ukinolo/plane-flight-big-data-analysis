@@ -6,10 +6,12 @@ COMPOSE_FILES = \
 	-f mongo/docker-compose.mongo.yaml \
 	-f metabase/docker-compose.metabase.yaml \
 	-f airflow/docker-compose.airflow.yaml \
+	-f kafka/docker-compose.kafka.yaml \
+	-f producer/docker-compose.producer.yaml \
 	--project-directory .
 
 up:
-	docker compose $(COMPOSE_FILES) up -d
+	docker compose $(COMPOSE_FILES) up -d --build
 
 down:
 	docker compose $(COMPOSE_FILES) down

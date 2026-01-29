@@ -1,0 +1,8 @@
+services:
+  producer:
+    build:
+      dockerfile: ./producer/Dockerfile
+    container_name: producer
+    command: ["python", "scripts/producer.py"]
+    networks:
+      - flight-analytics-net
