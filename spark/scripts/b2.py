@@ -20,7 +20,7 @@ spark = SparkSession.builder \
 
 df = spark.read.parquet(CLEAN_DATA_PATH)
 
-result = df.groupBy("Airline") \
+result = df.groupBy("Airline", "Year") \
     .agg(sum("AirTime").alias("TotalAirTimeMinutes"), \
         round(sum("Distance") * lit(miles_to_km), 2).alias("TotalDistanceKilometers"), \
         count("*").alias("NumberOfFlights"))

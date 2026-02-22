@@ -51,12 +51,23 @@ with DAG(
 ) as dag:
     root_job = create_root_job()
     
+    # Batch jobs
     clean_batch_data_job_config = ('clean_data', 'clean_data')
     clean_batch_data_job = create_spark_job(clean_batch_data_job_config[0], clean_batch_data_job_config[1])
 
     transform_batch_data_jobs_config = [
-        ('b1', 'test'),
+        ('b1', 'b1'),
+        ('b2', 'b2'),
+        ('b3', 'b3'),
     ]
     transform_batch_data_jobs = [create_spark_job(file, job_name) for file, job_name in transform_batch_data_jobs_config]
 
+    # Stream jobs
+    # clean_stream_data_job_config = ('clean_stream_data', 'clean_stream_data')
+    # clean_stream_data_job = create_spark_job(clean_stream_data_job_config[0], clean_stream_data_job_config[1])
+
+
+
+
     root_job >> clean_batch_data_job >> transform_batch_data_jobs
+    # root_job >> clean_stream_data_job

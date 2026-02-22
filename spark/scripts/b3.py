@@ -18,14 +18,26 @@ spark = SparkSession.builder \
 
 df = spark.read.parquet(CLEAN_DATA_PATH)
 
-destinations = df.groupBy("Dest") \
+destinations = df.groupBy("Dest", "Year") \
     .agg(count("*").alias("NumberOfArrivingFlights"))
 
-origins = df.groupBy("Origin") \
+origins = df.groupBy("Origin", "Year") \
     .agg(count("*").alias("NumberOfDepartureFlights"))
 
-airport_stats = destinations.join(origins, destinations["Dest"] == origins["Origin"], how="outer") \
-    .select(col("Dest").alias("Airport"), col("NumberOfArrivingFlights"), col("NumberOfDepartureFlights"))
+d = destinations.alias("d")
+o = origins.alias("o")
+
+airport_stats = d.join(
+    o,
+    (col("d.Dest") == col("o.Origin")) &
+    (col("d.Year") == col("o.Year")),
+    "outer"
+).select(
+    col("d.Dest").alias("Airport"),
+    col("d.NumberOfArrivingFlights"),
+    col("o.NumberOfDepartureFlights"),
+    col("d.Year")
+)
 
 airport_stats.write \
     .format("mongodb") \
