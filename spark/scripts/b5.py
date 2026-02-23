@@ -3,8 +3,6 @@ from pyspark.sql import SparkSession
 from pyspark.sql.functions import avg, col, sum, concat_ws, to_date, round
 from pyspark.sql.window import Window
 
-miles_to_km = 1.61
-
 MONGO_URI = os.environ['MONGO_URI']
 MONGO_DATABASE = "plane_flight_analysis"
 MONGO_COLLECTION = "b5"
