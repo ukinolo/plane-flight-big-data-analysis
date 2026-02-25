@@ -1,0 +1,62 @@
+import os
+from pyspark.sql import SparkSession
+from pyspark.sql.types import StructType, StringType
+from pyspark.sql.functions import from_json, to_json, struct
+from pyspark.sql.functions import col, count
+from pyspark.sql.types import DoubleType, IntegerType, BooleanType, LongType
+
+spark = SparkSession.builder \
+    .appName("Airplane s1") \
+    .getOrCreate()
+
+CLEAN_DATA_STREAM = "stream-flights-cleaned"
+KAFKA_BOOTSTRAP = "kafka:9092"
+
+MONGO_URI = os.environ['MONGO_URI']
+MONGO_DATABASE = "plane_flight_analysis"
+MONGO_COLLECTION = "s1"
+
+schema = StructType() \
+    .add("callsign", StringType()) \
+    .add("origin_country", StringType()) \
+    .add("time_position", LongType()) \
+    .add("last_contact", LongType()) \
+    .add("longitude", DoubleType()) \
+    .add("latitude", DoubleType()) \
+    .add("altitude", DoubleType()) \
+    .add("velocity", DoubleType()) \
+    .add("vertical_rate", DoubleType()) \
+    .add("heading", DoubleType()) \
+    .add("on_ground", BooleanType()) \
+    .add("time", LongType())
+
+df_raw = spark.readStream \
+    .format("kafka") \
+    .option("kafka.bootstrap.servers", KAFKA_BOOTSTRAP) \
+    .option("subscribe", CLEAN_DATA_STREAM) \
+    .option("startingOffsets", "earliest") \
+    .option("failOnDataLoss", "false") \
+    .load()
+
+df_parsed = (
+    df_raw
+    .select(from_json(col("value").cast("string"), schema).alias("data"))
+    .select("data.*")
+)
+
+df_in_air = df_parsed.filter(col("on_ground") == False)
+
+result = df_in_air.groupBy("time").agg(count("*").alias("planes_in_air"))
+
+query = (
+    result.writeStream 
+        .format("mongodb") 
+        .option("checkpointLocation", "/home/checkpoints/flights_stream/s1")
+        .option("spark.mongodb.connection.uri", MONGO_URI) \
+        .option("spark.mongodb.database", MONGO_DATABASE) \
+        .option("spark.mongodb.collection", MONGO_COLLECTION) \
+        .outputMode("complete")
+        .start()
+)
+
+query.awaitTermination()
