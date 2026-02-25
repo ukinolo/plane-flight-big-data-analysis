@@ -4,14 +4,16 @@ from pyspark.sql.types import StructType, StringType
 from pyspark.sql.functions import (
     from_json,
     col,
+    avg,
     window,
     from_unixtime,
-    approx_count_distinct
+    col
 )
-from pyspark.sql.types import DoubleType, IntegerType, BooleanType, LongType
+from pyspark.sql.types import DoubleType, BooleanType, LongType
+
 
 spark = SparkSession.builder \
-    .appName("Airplane s1") \
+    .appName("Stream 3") \
     .getOrCreate()
 
 CLEAN_DATA_STREAM = "stream-flights-cleaned"
@@ -19,7 +21,7 @@ KAFKA_BOOTSTRAP = "kafka:9092"
 
 MONGO_URI = os.environ['MONGO_URI']
 MONGO_DATABASE = "plane_flight_analysis"
-MONGO_COLLECTION = "s1"
+MONGO_COLLECTION = "s3"
 
 schema = StructType() \
     .add("callsign", StringType()) \
@@ -49,26 +51,23 @@ df_parsed = (
     .select("data.*")
 )
 
-df_in_air = df_parsed.filter(col("on_ground") == False)
-
-df_with_time = df_in_air.withColumn(
+df_with_time = df_parsed.withColumn(
     "event_time",
     from_unixtime(col("time")).cast("timestamp")
 )
 
-result = df_with_time \
+df_in_air = df_with_time.filter(col("on_ground") == False)
+
+result = df_in_air \
     .withWatermark("event_time", "5 minutes") \
     .groupBy(window("event_time", "2 minutes")) \
-    .agg(approx_count_distinct("callsign").alias("planes_in_air")) \
-    .select(
-        col("window.start").alias("window_start"),
-        col("planes_in_air")
-    )
+    .agg(avg("vertical_rate").alias("avg_vertical_rate")) \
+    .select(col("window.start").alias("window_start"), col("avg_vertical_rate"))
 
 query = (
     result.writeStream 
         .format("mongodb") 
-        .option("checkpointLocation", "/home/checkpoints/flights_stream/s1")
+        .option("checkpointLocation", "/home/checkpoints/flights_stream/s3")
         .option("spark.mongodb.connection.uri", MONGO_URI) \
         .option("spark.mongodb.database", MONGO_DATABASE) \
         .option("spark.mongodb.collection", MONGO_COLLECTION) \

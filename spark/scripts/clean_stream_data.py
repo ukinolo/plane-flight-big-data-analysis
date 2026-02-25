@@ -41,7 +41,7 @@ df_parsed = (
     .select("data.*")
 )
 
-df_us_flights = df_parsed.filter(col("origin_country") == "United States")
+df_us_flights = df_parsed.filter((col("origin_country") == "United States") & (col("callsign") != ""))
 
 df_output = df_us_flights.select(
     to_json(struct("*")).alias("value")
