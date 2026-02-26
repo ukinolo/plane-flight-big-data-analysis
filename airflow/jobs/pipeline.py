@@ -50,7 +50,6 @@ def create_spark_stream_job(file: str):
             "spark.executor.memory": "3g",
             "spark.driver.memory": "3g",
             "spark.executor.cores": "2",
-            # "spark.executor.instances": "2",
             "spark.cores.max": "16",
         },
         env_vars=spark_env_vars,
@@ -90,78 +89,6 @@ with DAG(
     root_job >> clean_batch_data_job >> transform_batch_data_jobs
 
 with DAG(
-    dag_id='Batch_part_clean',
-    default_args=default_args,
-    description='Run airplane flights data cleaning',
-    schedule_interval=None,
-    start_date=datetime(2025, 1, 1),
-    catchup=False,
-) as dag:
-    root_job = create_root_job()
-    
-    clean_batch_data_job = create_spark_job('clean_data')
-
-    root_job >> clean_batch_data_job
-
-with DAG(
-    dag_id='Batch_part_1',
-    default_args=default_args,
-    description='Run airplane flights data pipeline 1',
-    schedule_interval=None,
-    start_date=datetime(2025, 1, 1),
-    catchup=False,
-) as dag:
-    root_job = create_root_job()
-
-    transform_batch_data_jobs_config = [
-        'b1',
-        'b2',
-        'b3',
-    ]
-    transform_batch_data_jobs = [create_spark_job(file) for file in transform_batch_data_jobs_config]
-
-    root_job >> transform_batch_data_jobs
-
-with DAG(
-    dag_id='Batch_part_2',
-    default_args=default_args,
-    description='Run airplane flights data pipeline 2',
-    schedule_interval=None,
-    start_date=datetime(2025, 1, 1),
-    catchup=False,
-) as dag:
-    root_job = create_root_job()
-
-    transform_batch_data_jobs_config = [
-        'b4',
-        'b5',
-        'b6',
-        'b7',
-    ]
-    transform_batch_data_jobs = [create_spark_job(file) for file in transform_batch_data_jobs_config]
-
-    root_job >> transform_batch_data_jobs
-
-with DAG(
-    dag_id='Batch_part_3',
-    default_args=default_args,
-    description='Run airplane flights data pipeline 3',
-    schedule_interval=None,
-    start_date=datetime(2025, 1, 1),
-    catchup=False,
-) as dag:
-    root_job = create_root_job()
-
-    transform_batch_data_jobs_config = [
-        'b8',
-        'b9',
-        'b10',
-    ]
-    transform_batch_data_jobs = [create_spark_job(file) for file in transform_batch_data_jobs_config]
-
-    root_job >> transform_batch_data_jobs
-
-with DAG(
     dag_id='plane_flights_stream_jobs_start',
     default_args=default_args,
     description='Run airplane streaming jobs',
@@ -174,10 +101,10 @@ with DAG(
     transform_stream_data_jobs_config = [
         'clean_stream_data',
         's1',
-        # 's2',
-        # 's3',
-        # 's4',
-        # 's5',
+        's2',
+        's3',
+        's4',
+        's5',
     ]
     transform_stream_data_jobs = [create_spark_stream_job(file) for file in transform_stream_data_jobs_config]
 
