@@ -59,7 +59,7 @@ df_with_time = df_parsed.withColumn(
 df_in_air = df_with_time.filter(col("on_ground") == False)
 
 result = df_in_air \
-    .withWatermark("event_time", "5 minutes") \
+    .withWatermark("event_time", "3 minutes") \
     .groupBy(window("event_time", "2 minutes")) \
     .agg(avg("vertical_rate").alias("avg_vertical_rate")) \
     .select(col("window.start").alias("window_start"), col("avg_vertical_rate"))

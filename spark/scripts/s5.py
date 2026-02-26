@@ -68,7 +68,7 @@ df_with_time = df_with_speed_level.withColumn(
 )
 
 result = df_with_time \
-    .withWatermark("event_time", "5 minutes") \
+    .withWatermark("event_time", "3 minutes") \
     .groupBy(window("event_time", "2 minutes"), col("speed_level")) \
     .agg(
         approx_count_distinct("callsign").alias("num_planes")

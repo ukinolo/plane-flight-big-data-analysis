@@ -46,8 +46,8 @@ for _ in range(0, 100):
         else:
             print("Response was unexpected, breaking!")
             break
-        time.sleep(15)
+        time.sleep(30)
 
     except Exception as e:
         print("Error:", e)
-        time.sleep(30)
+        time.sleep(60)
